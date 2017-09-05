@@ -1,3 +1,5 @@
+package labbett;
+
 
 public class SymbolTable {
 	private static final int INIT_CAPACITY = 7;
@@ -67,15 +69,67 @@ public class SymbolTable {
 	 */
 	public void put(String key, Character val) {
 		
-		for(int i = 0; i < this.keys.length; i++){
-			if(keys[i] == null){
-				keys[i] = key;
-				vals[i] = val;
-				
+		N += 1;	
+		
+		//Om ett anrop till put där val är null ska ge samma resultat som anropet delete(key).
+		if(val == '\n') {	
+			N -= 1; //Behövs eftersom vi lägger till en på 'N' direkt.
+			delete(key);
+			return;
+		}
+		//////////////////////////////////////////////////////////////////////////////////////
+		
+		//Resultatet är odefinierat då hashtabellen är/blir full eller då key är null
+		if (key == null || N >= M) {
+			
+			return;
+		}
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		//Om identifieraren redan finns i tabellen, ändra till det nya val-värdet
+		int hashKey = hash(key);
+		try {
+			if(keys[hashKey].equals(key)){
+				vals[hashKey] = val;
 				return;
+			}else {
+				//Det här borde ändras till något effektivare
+				for(int i = 0; i < keys.length; i++){
+					if(keys[i].equals(key)){
+						vals[i] = val;
+						return;
+					}
+				}
+			}
+		}catch(NullPointerException e){
+			
+		}
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		
+		//Om nyckelplatsen är upptagen och nyckelordet skiljer sig, vill vi lägga till 
+		//nyckeln och värdet på nästa lediga plats uppåt i listan.
+		
+		if(keys[hashKey] != null && !keys[hashKey].equals(key)){
+			for(int i = hashKey; i < M; i++){
+				if(keys[i] == null){
+					keys[i] = key;
+					vals[i] = val;
+					return;
+				}
+			}
+			for(int i = 0; i < hashKey; i++){
+				if(keys[i] == null){
+					keys[i] = key;
+					vals[i] = val;
+					return;
+				}
 			}
 		}
 		
+		keys[hashKey] = key;
+		vals[hashKey] = val;
+				
 		return;
 	} // dummy code
 
@@ -83,14 +137,35 @@ public class SymbolTable {
 	 * Return the value associated with the given key, null if no such value
 	 */
 	public Character get(String key) {
-
-		for(int i = 0; i < this.keys.length; i++){
+		
+		//Ta hashvärde, kolla upp nyckeln i listan, om nyckel = nyckel i listan returnera val på den platsen. Stämmer de inte, gå vidare upp i listan
+		
+		int hashKey = hash(key);
+		//Om värdet finns där det bör finnas, returneras det
+		try {
+			if(keys[hashKey].equals(key)){
+				return vals[hashKey];
+			}
+		}catch(NullPointerException e){
+			return null;
+		}
+		
+		//Värdet finns inte där det bör finnas, kollar platserna uppåt om de stämmer
+		
+		for(int i = hashKey + 1; i < M; i++){
+			if(keys[i].equals(key)){
+				return vals[i];
+			}
+		}
+		
+		for(int i = 0; i < hashKey; i++){
 			if(keys[i].equals(key)){
 				return vals[i];
 			}
 		}
 		
 		return null;
+
 	} // dummy code
 
 	/**
@@ -98,14 +173,33 @@ public class SymbolTable {
 	 */
 	public void delete(String key) {
 		
-		for(int i = 0; i < this.keys.length; i++){
-			if(keys[i].equals(key)){
-				keys[i] = "";
-				vals[i] = '-';
+		//Börjar med att minska listans storlek med 1
+		N -= 1;
+		int hashKey = hash(key);
 				
+		//Om key är detsamma som keys[hashKey] så tas nyckeln bort
+		if(key.equals(keys[hashKey])){
+			keys[hashKey] = null;
+			//Här ska rearrange ske
+			
+			
+			
+			return;
+		}
+		
+		//Om key inte överrensstämmer med nyckeln på designerad plats, gå vidare uppåt för att se om
+		//den finns längre upp.
+		int tmpInt = hashKey + 1;
+		
+		while(tmpInt != hashKey) {
+			tmpInt = (tmpInt < M) ? tmpInt: 0;
+			if(key.equals(keys[tmpInt])){
+				vals[tmpInt] = null;
+				keys[tmpInt] = null;
+				//Här ska rearrange ske
 				return;
-				
-			}
+			}	
+			tmpInt++;
 		}		
 		return;
 	} // dummy code

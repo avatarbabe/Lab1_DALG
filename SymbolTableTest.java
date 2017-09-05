@@ -1,3 +1,5 @@
+package labbett;
+
 import java.io.*;
 
 class SymbolTableTest {
